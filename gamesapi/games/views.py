@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from rest_framework.decorators import api_view
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 from rest_framework import status
@@ -15,6 +16,8 @@ class JSONResponse(HttpResponse):
         kwargs['content_type'] = 'application/json'
         super(JSONResponse, self).__init__(content, **kwargs)
 
+
+@api_view(['GET', 'POST'])
 @csrf_exempt
 def game_list(request):
     if request.method == 'GET':
@@ -31,7 +34,9 @@ def game_list(request):
                                 status=status.HTTP_201_CREATED)
         return JSONResponse(games_serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
-        
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
 @csrf_exempt
 def game_detail(request, pk):
     try:
