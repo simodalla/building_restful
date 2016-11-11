@@ -21,12 +21,17 @@ class GameSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Game
-        fields = ('id', 'name', 'release_date', 'game_category', 'played')
+        fields = (
+            'url',
+            'game_category',
+            'name',
+            'release_date',
+            'played')
 
 
 class ScoreSerializer(serializers.HyperlinkedModelSerializer):
     # We want to display all the details for the game
-    games = GameSerializer()
+    game = GameSerializer()
 
     # We don't include the player because it will be nested in the player
     class Meta:
