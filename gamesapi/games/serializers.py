@@ -2,8 +2,6 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from games.models import Game, GameCategory, Player, PlayerScore
 
-from . import views
-
 
 class UserGameSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
