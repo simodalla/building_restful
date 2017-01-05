@@ -41,7 +41,7 @@ class MessageResource(Resource):
         except SQLAlchemyError as e:
             db.session.rollback()
             resp = jsonify({"error": str(e)})
-            return resp, status.HTTP_400_BAD_REQUEST
+            return make_response(resp, status.HTTP_400_BAD_REQUEST)
 
     def delete(self, id):
         message = Message.query.get_or_404(id)
@@ -52,7 +52,7 @@ class MessageResource(Resource):
         except SQLAlchemyError as e:
             db.session.rollback()
             resp = jsonify({"error": str(e)})
-            return resp, status.HTTP_401_UNAUTHORIZED
+            return make_response(resp, status.HTTP_401_UNAUTHORIZED)
 
 
 class MessageListResource(Resource):
@@ -89,7 +89,7 @@ class MessageListResource(Resource):
         except SQLAlchemyError as e:
             db.session.rollback()
             resp = jsonify({"error": str(e)})
-            return resp, status.HTTP_400_BAD_REQUEST
+            return make_response(resp, status.HTTP_400_BAD_REQUEST)
 
 
 class CategoryResource(Resource):
@@ -109,13 +109,19 @@ class CategoryResource(Resource):
             return errors, status.HTTP_400_BAD_REQUEST
         try:
             if 'name' in category_dict:
-                category.name = category_dict['name']
+                category_name = category_dict['name']
+                if Category.is_unique(id=id, name=category_name):
+                    category.name = category_name
+                else:
+                    response = {'error': 'A category with the same name already'
+                                         ' exists'}
+                    return response, status.HTTP_400_BAD_REQUEST
             category.update()
             return self.get(id)
         except SQLAlchemyError as e:
             db.session.rollback()
-            resp = jsonify({"error": str(e)})
-            return resp, status.HTTP_400_BAD_REQUEST
+            resp = {"error": str(e)}
+            return make_response(resp, status.HTTP_400_BAD_REQUEST)
 
     def delete(self, id):
         category = Category.query.get_or_404(id)
@@ -126,7 +132,7 @@ class CategoryResource(Resource):
         except SQLAlchemyError as e:
             db.session.rollback()
             resp = jsonify({"error": str(e)})
-            return resp, status.HTTP_401_UNAUTHORIZED
+            return make_response(resp, status.HTTP_401_UNAUTHORIZED)
 
 
 class CategoryListResource(Resource):
@@ -140,20 +146,22 @@ class CategoryListResource(Resource):
         if not request_dict:
             resp = {'message': 'No input data provided'}
             return resp, status.HTTP_400_BAD_REQUEST
-        print(request_dict)
         errors = category_schema.validate(request_dict)
         if errors:
             return errors, status.HTTP_400_BAD_REQUEST
+        category_name = request_dict['name']
+        if not Category.is_unique(id=0, name=category_name):
+            response = {'error': 'A category with the same name already exists'}
+            return response, status.HTTP_400_BAD_REQUEST
         try:
-            category = Category(request_dict['name'])
+            category = Category(category_name)
             category.add(category)
             query = Category.query.get(category.id)
             result = category_schema.dump(query).data
             return result, status.HTTP_201_CREATED
         except SQLAlchemyError as e:
             db.session.rollback()
-            resp = jsonify({"error": str(e)})
-            # return resp, status.HTTP_400_BAD_REQUEST
+            resp = {"error": str(e)}
             return make_response(resp, status.HTTP_400_BAD_REQUEST)
 
 
